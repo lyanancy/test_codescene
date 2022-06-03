@@ -1,0 +1,27 @@
+FROM node:16.3.0-stretch
+ENV TZ="Asia/Tokyo"
+
+WORKDIR /usr/src/app
+
+RUN apt-get update && \
+    apt-get -y install sudo && \
+    apt-get -y clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 65522 appuser && \
+    useradd -u 65522 -g 65522 -m appuser && \
+    echo "appuser:appuser" | chpasswd && \
+    adduser appuser sudo
+
+RUN npm install -g npm@7.19.1 && \
+    npm -g config set user appuser && \
+    sudo chown -R appuser:appuser '/usr/local/lib/node_modules/' && \
+    sudo chown -R appuser:appuser '/usr/src/app'
+
+USER appuser
+
+COPY --chown=appuser:appuser ./workplace/ .
+
+RUN yarn
+
+CMD ["yarn", "start"]
